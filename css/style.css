@@ -1,0 +1,64 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+#gameboard{
+	border: 1px solid #333;
+	display: block;
+	margin:20px auto 0;
+}
+.drop{
+	float: left;
+	border: 1px solid blue;
+	width: 60px; 
+	height: 30px;
+	cursor: pointer;	
+}
+.block{
+	float: left;
+	border: 1px solid red;
+	width: 60px; 
+	height: 60px;
+}
+.player{
+	width: 256px;
+	height: 305px;
+	display: block;
+	padding-top: 30px;
+}
+.red{
+	background: url(../images/red.jpg) no-repeat scroll 0 bottom transparent;
+	float: left;	
+}
+
+.yellow{
+	background: url(../images/yellow.jpg) no-repeat scroll 0 bottom transparent;
+	float: right;
+}
+.winner{
+	background: url(../images/winner.png) no-repeat scroll 0 bottom transparent !important;
+}
+.arrow{
+	background: url(../images/down_arrow.jpg) no-repeat scroll 0 bottom transparent;
+	height: 42px;
+	width: 41px;
+	dispay: none;
+	margin: 0 auto;
+	display: none;
+}
+
+.active .arrow{
+	display: block;
+}
+.redcoin{background-color: red;}
+.yellowcoin{background-color: yellow;}
+
+.redcoin,
+.yellowcoin{
+	width: 40px;
+	height: 40px;
+	display: block;
+	-webkit-border-radius: 20px 20px 20px 20px;
+	        border-radius: 20px 20px 20px 20px;
+	margin: 10px;
+}
