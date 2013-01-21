@@ -1,174 +1,206 @@
-function arrayPad(start, end, value) {
-    arr = [];
-    while (start++ < end) {
-        arr.push(value);
-    }
-    return arr;
-}
+(function($){
+	$.fn.extend({
+		fourInRow: function(options) {
+			this.defaultOptions = {
+				columns : 7,
+				rows : 5,
+				size : 60
 
-function chunk(array, size) {
-    return [].concat.apply([],
-    array.map(function (elem, i) {
-        return i % size ? [] : [array.slice(i, i + size)];
-    }));
-}
+			};
 
+			var settings = $.extend({}, this.defaultOptions, options);
+	
+			return this.each(function() {
+				new $.FIRGame(this, settings);
+			});
+		},
+	});
 
-var columns = 7, //7
-    rows = 6, //6
-    scale = 60;
-
-var empty = arrayPad(0, columns * rows, 0);
-var start = chunk(empty, rows);
-
-
-// console.log(start);
-
-$(document).ready(function () {
-    $('.new').on('click', function () {
-        window.location.reload(true);
-    });
-
-    function check_for_win() {
-        var i;
-        var j;
-        var counter;
-
-        // horizontally
-        for (i = 0; i < rows; i++) {
-            //console.info('i: ========' + i + '========');
-            counter = 1;
-            for (j = 0; j < columns - 1; j++) {
-                //console.log(j + ' ' + i + ' = ' +  start[j][i] + " | check " + j+i + " <> " + (j + 1) + i  );
-                if (start[j][i] != 0 && start[j][i] == start[j + 1][i]) {
-                    counter++;
-                }
-
-                if (counter == 4) return start[j][i];
-            }
-            //console.warn('counter: ' + counter);	        
-        }
-
-
-        //apeak
-        for (i = 0; i < rows; i++) {
-            // console.info('i: ========' + i + '========');
-            counter = 1;
-            for (j = 0; j < (columns - 1); j++) {
-                // console.log( i +''+ j + ' = ' +  start[i][j] + " | check " + i+j + " <> " + i + (j+1)  );
-                if (start[i][j] != 0 && start[i][j] == start[i][j + 1]) {
-                    counter++;
-                }
-
-                if (counter == 4) return start[i][j];
-            }
-            console.warn('counter: ' + counter);
-        }
-        //diagonal
-        for (i = 0; i < rows - 4; i++) {
-            counter = 1;
-            for (j = 0; j < (columns - 5); j++) {
-                console.log(i + '' + j + ' = ' + start[i][j] + " | check " + i + j + " <> " + i + (j + 1));
-
-            }
-        }
-        var end = is_full();
-
-        if (end == 0) {
-            alert("The end");
-        }
-
-        return 0;
-    }
-
-    function is_full() {
-
-        for (var i = 0; i < rows; i++) {
-            for (var j = 0; j < columns; j++)
-            if (start[i][j] == '0') return 1;
-        }
-
-        return 0;
-    }
-
-
-
-
-    var board = $('#gameboard'),
-        players = $('.player'),
-        redplayer = $('.red'),
-        yellowplayer = $('.yellow'),
-        turn = 1; //red player = 1, yellow player = -1
-
-
-    board.css({
-        width: (columns * scale + columns * 2),
-        height: rows * scale + rows * 2 + 30
-    });
-
-    for (var i = 0; i < columns; i++) {
-        board.append($(document.createElement('div')).addClass('drop').data('x', i).text('press'));
-    }
-    for (i = 0; i < rows; i++) {
-        for (var j = 0; j < columns; j++) {
-            //.css({ width: scale, height: scale })
-            board.append($(document.createElement('div')).addClass('block').attr('ID', 'cell' + j + i)); //.data('x', j).data('y', i) )
-        }
-    }
-
-    redplayer.toggleClass('active');
-
-    board.on('click', '.drop', function () {
-        if ($('.player').hasClass('winner')) {
-        	alert('Game over');
-            return false;
-        }
-
-        var x = $(this).data('x');
-        // var y = $(this).data('y');
-        var coin = (turn > 0) ? 'redcoin' : 'yellowcoin';
-
-        var y = -1;
-        for (var i = 0; i < columns; i++) {
-            if (start[x][i] == 0) {
-                y = i;
-            }
-        }
-
-        //console.log('sel row:' + x);
-        if (y >= 0) {
-
-            start[x][y] = turn;
-            console.log(start);
-
-            $('div#cell' + x + y).html('<span class="' + coin + '"></span>');
-            turn = turn * (-1);
-            var win = check_for_win();
-
-            if (win == 0) {
-                players.toggleClass('active');
-            } else {
-                var winner = (win > 0) ? redplayer : yellowplayer;
-                winner.addClass('winner');
-            }
-        } else {
-            console.log('imposible');
-
-        }
-
-
-
-
-        /*		start[y][x] = turn;
-		console.log(x + ' ' + y);
-		console.log(start);
+	$.FIRGame = function(el, opt) {
 		
-		$(this).addClass('used').html('<span class="' + coin + '"></span>');
-		turn = turn * (-1);
-		players.toggleClass('active');*/
-        // console.log(turn);
+		var $el = $(el),
+			row = fillZero(opt.columns),
+			board = fillZero(opt.columns * opt.rows),
+			players = $('.player'),
+			redplayer = $('.red'),
+			yellowplayer = $('.yellow'),
+			turn = 1, //first player = 1, second player = -1;
+			dprimary = [],
+			dsecondary = [];
+
+			
+		for (i=0;i<=opt.columns-4;i++){
+			dprimary[dprimary.length] = i;
+		}
+		for (i=1;i<=opt.rows-4;i++){
+			dprimary[dprimary.length] = i*opt.columns;
+		}
+
+		for (i=opt.columns-4;i<opt.columns;i++){
+			dsecondary[dsecondary.length] = i;
+		}
+	
+		for (i=1;i<=opt.rows-4;i++){
+			dsecondary[dsecondary.length] = (i+1)*opt.columns - 1;	
+		}
+		
+
+/*		console.log(dprimary);
+		console.log(dsecondary);
+
+		console.log(board);
+*/		
+		init();
+
+		function fillZero(count) {
+			var a = [];
+			for(var i=0;i<count;i++){
+				a[a.length] = 0;
+			}
+			return a;
+		}
+
+		function init(){		
+			$el.css({
+					width: (opt.columns * opt.size + opt.columns * 2),
+					height: opt.rows * opt.size + opt.rows * 2 + 30
+			}).html( '' );
+			
+			$.each(row,function(i) {
+				$('<div>', {class: 'drop', text: 'press'}).data('x', i).appendTo($el);
+			});
+
+			$.each(board,function(i) {
+				$('<div>', {class: 'block', text: i, id: 'cell' + i}).appendTo($el);
+				
+			});
+			redplayer.addClass('active');		
+		}
+		
+		$el.on('click', '.drop', function () {
+			console.info('===============turn==================');
+			
+			var x = $(this).data('x'),
+				coin = (turn > 0) ? 'coin1' : 'coin2';
+
+			var pos, id = -1;
+			for(var i=(opt.columns-1);i >= 0 ;i--) {
+				pos = i*opt.columns + x;
+				if (board[pos] == 0) {
+					id = pos;
+					break;
+				}
+			}
+
+			if (id >= 0) {
+				board[id] = turn;
+				$('div#cell' + id).html('<span class="' + coin + '"></span>');
+				turn = turn * (-1);
+				var win = isCompleted(board);
+				
+				if (win == 0) {
+					players.toggleClass('active');
+				} else {
+					var winner = (win > 0) ? redplayer : yellowplayer;
+					winner.addClass('winner');
+				}
+			} else {
+				console.log('imposible');
+			}
+			console.log(board);
+			
+		});
+
+		function isCompleted(moves){
+			var i,j,line,check,draw;
+			//check –			
+			// console.info('----------check----------');
+			for (i = 0;i<opt.columns-1;i++) {
+				line = moves.slice(i*opt.columns, i*opt.columns + opt.columns);
+				if ( (check = checkLine(line)) != 0 )
+					return check;				
+			}
+			
+			//check |
+			console.info('|||||||||||check|||||||||||');
+			for (i = 0;i<(opt.columns -1);i++) {
+				line = [];
+				for (j = 0;j<opt.rows;j++) {
+					line[line.length] = moves[i + j*opt.columns];
+				}
+			
+				if ( (check = checkLine(line)) != 0 )
+					return check;
+				
+			}
 
 
-    });
+			//check \
+			// console.info('\\\\\\\\\\\check\\\\\\\\\\\\\\');
+			for (i=0;i<=dprimary.length-1;i++){
+				var indx=dprimary[i];
+				line = [];
+				while(typeof(moves[indx]) !== 'undefined'){
+					//console.log(indx);					
+					line[line.length] = moves[indx];
+					indx += opt.columns + 1;
+					
+				}
+				if ( (check = checkLine(line)) != 0 )
+					return check;
 
-});
+			}
+
+			//check /
+			// console.info('/////////////check/////////////');
+			for (i=0;i<=dsecondary.length-1;i++){
+				var indx = dsecondary[i];
+				line = [];
+				while(typeof(moves[indx]) !== 'undefined'){
+					line[line.length] = moves[indx];
+					if (indx%opt.columns == 0){break;}
+					indx += opt.columns - 1;
+				}								
+				if ( (check = checkLine(line)) != 0 )
+					return check;
+
+			}
+
+
+			draw = true;
+			for (i=0;i<opt.columns-1;i++){
+				if (moves[i] == 0) {
+					draw = false;
+					break;
+				}
+			}
+			if (draw){ drawGame(); }
+	
+			return 0;
+		}
+
+		function checkLine(line){
+			console.warn(line);
+			var counter = 0;
+			for (var i=0; i<line.length-1;i++){
+				if (line[i]!=0 && line[i] == line[i+1]) {
+					counter++;
+				} else {
+					counter = 0;
+				}
+				// console.info(counter);
+				if (counter == 3) return line[i];
+			}
+			return 0;
+		}	
+
+		function drawGame(){
+			console.log('draw');
+			
+		}
+
+	};
+
+
+})(jQuery);
+

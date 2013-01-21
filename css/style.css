@@ -50,11 +50,11 @@
 .active .arrow{
 	display: block;
 }
-.redcoin{background-color: red;}
-.yellowcoin{background-color: yellow;}
+.coin1{background-color: red;}
+.coin2{background-color: yellow;}
 
-.redcoin,
-.yellowcoin{
+.coin1,
+.coin2{
 	width: 40px;
 	height: 40px;
 	display: block;
